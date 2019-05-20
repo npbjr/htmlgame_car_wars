@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	<title>Brick Game</title>
+	<style type="text/css">
+	canvas {
+    border:1px solid #d3d3d3;
+    background-color: #D5DBDB;
+}
+	</style>
+	 <script src="js/jquery-3.1.1.min.js"></script>
+</head>
+
+<body onload="startGame()" style"background-color:black">
+<div style="top:30px;position:absolute;left:130px;display:inline-block">Score<p class="score" style="margin-left:5px;display:inline-block">0</p></div>
+<img src="images/burn.gif" id="burn" width="32" height="32">
+<script type="text/javascript">
+var audio = new Audio();
+audio.src = "sounds/laser2.wav";
+var myGamePiece;
+var myObstacles = [];
+var myObstacles2 = [];
+var fireball;
+var x_piece;
+var top_piece;
+var y_piece;
+var cars = ["images/graycar.png","images/greencar.png","images/redcar.png","images/z.gif"];
+function startGame() {
+    myGamePiece = new component(30, 30, "images/graycar.png", 0, 400,"image");
+    fireball = new component(20,20,"images/energyball.png",10,390,"image");
+    fireball2 = new component(20,20,"images/energyball.png",0,390,"image");
+    top_piece = new component(2000,10,"yellow",-1000,0,"background");
+
+    myGameArea.start();
+}
+
+var myGameArea = {
+    canvas : document.createElement("canvas"),
+    start : function() {
+        this.canvas.width = 200;
+        this.canvas.height = 500;
+        this.context = this.canvas.getContext("2d");
+        document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+        this.frameNo = 0;
+        this.interval = setInterval(updateGameArea, 20);
+        },
+    clear : function() {
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    },
+    stop : function() {
+        clearInterval(this.interval);
+    }    
+}
+
+function component(width, height, color, x, y,type) {
+    if (type == "image") {
+        this.image = new Image();
+        this.image.src = color;
+    }
+    this.width = width;
+    this.height = height;
+    this.speedX = 0;
+    this.speedY = 0;    
+    this.x = x;
+    this.y = y;    
+    this.update = function() {
+        ctx = myGameArea.context;
+        if (type == "image") {
+            ctx.drawImage(this.image, 
+                this.x, 
+                this.y,
+                this.width, this.height);
+        } else {
+            ctx.fillStyle = color;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+        }
+
+    }
+    this.newPos = function() {
+        this.x += this.speedX;
+        this.y += this.speedY;        
+    }
+
+    this.crashWith = function(otherobj) {
+        var myleft = this.x;
+        var myright = this.x + (this.width);
+        var mytop = this.y;
+        var mybottom = this.y + (this.height);
+        var otherleft = otherobj.x;
+        var otherright = otherobj.x + (otherobj.width);
+        var othertop = otherobj.y;
+        var otherbottom = otherobj.y + (otherobj.height);
+        var crash = true;
+        if ((mybottom < othertop) || (mytop > otherbottom) || (myright < otherleft) || (myleft > otherright)) {
+            crash = false;
+        }
+        return crash;
+    }
+}
+var position=0;
+var ob_speed=1;
+var car=cars[0];
+var c_size_r=30;
+var c_size_l=30;
+function changeSize(){
+    c_size_l=100;
+    c_size_r=100;
+    setTimeout(function(){
+        c_size_l=30;
+        c_size_r=30;
+    },500)
+}
+function position_handler(){
+    position= Math.random() * (200 - 0) + 0;
+    
+}
+
+function changeCar(){
+    car = cars[Math.floor(Math.random()*cars.length)];
+
+}
+function ob_speed_handler(){
+    ob_speed++;
+    if(ob_speed>3){
+        ob_speed=1;
+    }
+}
+var score=0;
+function ob1(){
+    
+
+    for (i = 0; i < myObstacles.length; i += 1) {
+        if (myGamePiece.crashWith(myObstacles[i])) {
+            $("img").attr("src","images/burn.gif");
+            $("img").parent().css({position: 'relative'});
+            $("img").css({top: myGamePiece.y, left: myGamePiece.x, position:'absolute'});
+            myGameArea.stop();
+            return;
+        } 
+        if(fireball.crashWith(myObstacles[i]) || fireball2.crashWith(myObstacles[i]) || fireball.crashWith(top_piece)){
+                score=score+1;
+
+                $(".score").html(score);
+                // myObstacles[i] = new component(40,40,"images/burn.gif",myObstacles[i].x,myObstacles[i].y,"image");
+                // var image = new Image();
+                // image.src = "images/burn.gif";
+                // ctx = myGameArea.context;
+                // ctx.drawImage(image, myObstacles[i].x, myObstacles[i].y, 40, 40);
+
+                // myObstacles[i] = new component(0,0,"brown",-1000,0,"background");
+                $("img").attr("src","images/burn.gif");
+                $("img").parent().css({position: 'relative'});
+                $("img").css({top: myObstacles[i].y, left: myObstacles[i].x, position:'absolute'});
+              
+                setTimeout(function(){
+                   $("img").removeAttr('src');
+                   $("img").removeAttr('style');
+                },1000);
+                
+                myObstacles[i] = new component(0,0,"brown",-1000,0,"background");
+                fireball = new component(20,20,"images/energyball.png",myGamePiece.x+10,myGamePiece.y,"image");
+                fireball2 = new component(20,20,"images/energyball.png",myGamePiece.x,myGamePiece.y,"image");
+                return;
+            }
+       
+    }
+    
+
+    myGameArea.clear();
+    myGameArea.frameNo += 1;
+    if (myGameArea.frameNo == 1 || everyinterval(20)) {
+       
+        y = myGameArea.canvas.height;
+        myObstacles.push(new component(c_size_r, c_size_l, car, position, 0,"image"));
+
+        x_piece = myGamePiece.x;
+        y_piece = myGamePiece.y;
+
+        
+    }
+    for (i = 0; i < myObstacles.length; i += 1) {
+        myObstacles[i].y -= -3;
+        myObstacles[i].update();
+
+    }
+   
+    myGamePiece.newPos();    
+    myGamePiece.update();
+    top_piece.newPos();
+    top_piece.update();
+    fireball.newPos();
+    fireball.update();
+    fireball2.newPos();
+    fireball2.update();
+}
+var set_pos = setInterval(position_handler,500);
+var set_speed = setInterval(ob_speed_handler,5000);
+var change_car = setInterval(changeCar,300);
+var change_car_size = setInterval(changeSize,5000);
+function updateGameArea() {
+    ob1();
+   
+}
+
+function everyinterval(n) {
+    if ((myGameArea.frameNo / n) % 1 == 0) {return true;}
+    return false;
+}
+
+function moveup() {
+    myGamePiece.speedY -= 3;
+    fireball.speedY -=3; 
+    fireball2.speedY -=3;
+    setTimeout(function(){
+        myGamePiece.speedY += 3;
+        fireball.speedY +=3;
+        fireball2.speedY +=3;
+    },100);
+}
+
+function movedown() {
+    myGamePiece.speedY += 3; 
+    fireball.speedY +=3;
+    fireball2.speedY +=3;
+    setTimeout(function(){
+        myGamePiece.speedY -= 3;
+        fireball.speedY -=3;
+        fireball2.speedY -=3;
+    },100);
+}
+
+function moveleft() {
+    myGamePiece.speedX -=3;
+    fireball.speedX -=3;
+    fireball2.speedX -=3;
+    setTimeout(function(){
+    	myGamePiece.speedX += 3;
+        fireball.speedX +=3;
+        fireball2.speedX +=3;
+    },100);
+}
+
+function moveright() {
+    myGamePiece.speedX += 3; 
+    fireball.speedX +=3;
+     fireball2.speedX +=3;
+    setTimeout(function(){
+    	myGamePiece.speedX -= 3;
+        fireball.speedX -=3;
+        fireball2.speedX -=3;
+    },100);
+}
+
+function clearmove() {
+    myGamePiece.speedX = 0; 
+    myGamePiece.speedY = 0; 
+}
+function fire(){
+    
+    fireball.speedY-=10;
+    fireball2.speedY-=10;
+
+}
+
+</script>
+<script type="text/javascript">
+$(document).keydown(function(e) {
+	switch(e.which) {
+		case 37:
+			moveleft();
+			console.log("left");
+
+			break;
+		case 39:
+			moveright();
+			console.log("right");
+			break;
+        case 38:
+            moveup();
+            console.log("up");
+            break;
+        case 40:
+            movedown();
+            console.log("down");
+            break;
+        case 32:
+            fire();
+            console.log("fire");
+            audio.play();
+            break;
+	}
+});
+</script>
+
+</body>
+</html>
